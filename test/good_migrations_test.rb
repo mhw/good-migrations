@@ -22,7 +22,7 @@ class GoodMigrationsTest < Minitest::Test
     _, stderr, status = shell("bundle exec rake db:drop db:create db:migrate")
 
     assert_match(/GoodMigrations::LoadError: Rails attempted to auto-load:/, stderr)
-    assert_match(/example\/app\/models\/pant.rb/, stderr)
+    assert_match(/(example\/app\/models\/pant.rb|Pant)/, stderr)
     refute_equal 0, status.exitstatus
   end
 

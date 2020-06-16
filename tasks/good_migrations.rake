@@ -49,7 +49,6 @@ end
 
 namespace :good_migrations do
   task :disable_autoload do
-    next if ENV["GOOD_MIGRATIONS"] == "skip"
     if __good_migrations_zeitwerk_enabled?
       ::GOOD_MIGRATIONS_AUTOLOADED_CONSTANTS_AT_START =
         ActiveSupport::Dependencies.autoloaded_constants
@@ -69,7 +68,6 @@ namespace :good_migrations do
   end
 
   task :after_migrations do
-    next if ENV["GOOD_MIGRATIONS"] == "skip"
     if ::GOOD_MIGRATIONS_AUTOLOADED_CONSTANTS_AT_START !=
         ActiveSupport::Dependencies.autoloaded_constants
       __good_migrations_raise(
@@ -80,12 +78,14 @@ namespace :good_migrations do
   end
 end
 
-Rake.application.in_namespace("db:migrate") do |namespace|
-  ([Rake::Task["db:migrate"]] + namespace.tasks).each do |task|
-    task.prerequisites << "good_migrations:disable_autoload"
-    if __good_migrations_zeitwerk_enabled?
-      task.enhance do
-        Rake::Task["good_migrations:after_migrations"].invoke
+unless ENV["GOOD_MIGRATIONS"] == "skip"
+  Rake.application.in_namespace("db:migrate") do |namespace|
+    ([Rake::Task["db:migrate"]] + namespace.tasks).each do |task|
+      task.prerequisites << "good_migrations:disable_autoload"
+      if __good_migrations_zeitwerk_enabled?
+        task.enhance do
+          Rake::Task["good_migrations:after_migrations"].invoke
+        end
       end
     end
   end
